@@ -1,0 +1,29 @@
+#	Optimization
+#
+1>	When child process has stopped it will return signal 'SIGCHLD' to father process.
+	|
+	Now,can capture that signal to do some action.So,father process does not need to check status for child process
+	in cycle.
+
+2>	When called kernel interfaces after will entry to kernel space.So must to do somework for cut back with context-switch.
+	|
+	Now,try to avoid for call kernel interfaces on user space,so have to reduce with view operation or file I/O.
+
+3>	For other version of program,use 'DEBUG' macro to open features for that version.
+
+#	Debug
+#
+1>	Detected error from function semop().
+	|
+	For the third argument,I used size of structure sembuf as parameter.
+	Had been fixed that error.
+
+2>	Context-Switch.
+	|
+	As much as possible reduce the action context-switch,lower to using kernel interfaces.
+
+3>	Use signal 'SIGCHLD' to check status for child process.
+	Now,not have to use if-else to check its status at second cycle of INPUT().
+
+
+	

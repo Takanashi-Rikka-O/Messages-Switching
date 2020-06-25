@@ -1,0 +1,68 @@
+								Project - Message-Switching
+
+
+###################
+
+Program Name : mssw
+
+Features : 
+
+	> Use the TCP protocol send messages to destination.
+	> Anyone could send messages to destination and receive the messages from source.(C/S,because if not have server then can not make connection.)
+	> It's only be usage by talk,don't transport some type of file...
+	> At time is the talk was started,must use 'SWITCH' command to change peer to start a new talk.And at the time is usage command 'SWITCH',process will 
+		transport information 'User was quitted.' to inform the old peer,but doesn't wait acknowledge.
+
+Work hevior : 
+
+	> Every Terminal are Send data to peer and Listen Socket of itself as same time.
+	> Frok a Subprocess to listen socket.Why there is not use pthread ? Because pthread must have lib pthread.so as providition.
+	> Get argument from command line and set one peer as server.
+
+Limit : 
+
+	> Destination and Source address the type is using IP-Address(dotted decimal).
+	> Data buffer size will be using 8192+1 Bytes.
+	> Default port using 9292.
+
+Control Group : 
+	
+		> HELP
+			> 'HELP' command will show operating method to screen.
+
+#		> START
+#			> 'START' command will be startting up process features.(Setting to default feature,when process start up will enter this feature.)
+
+		> EXIT
+			> 'EXIT' command will exit the process.
+
+		> MODIFY
+			> 'SWITCH' command will change peer by news address.Then send a information "User was quitted." as inform to the old peer.
+
+Operating System : Linux/UNIX.
+
+Portable : NO.
+
+Environment : 
+
+	> glibc-2.17			(Bottom interface version)
+	> Linux-kernel 3.10		(Linux kernel version)
+	> Centos 1062.1.2.e17.x86_64	(OS release version)
+	> GNU/GCC 4.8.5-39		(Translater version)
+
+
+Work space - GUI : No GUI.
+
+Work space - Console : YES.
+
+###################
+
+###
+
+		Revise : 
+			This process is use UDP and set server and client as same that is greater than use TCP with C/S module.
+		Revise program is stay it in after of time.
+			
+
+
+	

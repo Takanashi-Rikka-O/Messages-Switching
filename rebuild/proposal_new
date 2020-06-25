@@ -1,0 +1,273 @@
+								Project - Messages-Switching
+
+Rebuild version :
+
+	Why do rebuild for this application?
+	Because I want to use UDP build peer to peer work model.
+
+	How many features for new version application?
+	'SWITCH' command to switching peer with talk.
+	'EXIT#' command to end process.
+
+Work mode :
+
+	1> First use fork to creat a child process.
+	2> Feature for child process it will listen local UDP socket and read data from other peer.
+	3> Feature for parent process it will wait input from user.Parent process can use command 'SWITCH' and command 'EXIT#'.
+
+	How to shut this application to down?
+	Enter signal SIGINT to shutdown it.Or use command 'EXIT#' in parent process.
+
+
+Work order : 
+	1> Excute process.
+	2> Create resources in main().
+	3> Fork.
+	4> Call INITIALIZER().
+	5> Do works of parent process and child process.
+	6> Do some work for values from return by INPUT() and OUTPUT().
+	7> Stop process.
+
+Default settings : 
+
+	1> Default port = 56636.	# Does not support to changing port for program.(Now,the program is support ot change the TSAP.)
+
+Global resources : 
+
+	1> IPC_ID.
+	2> CONDITION.(Variable CONDITION is not as same with parent process and child process)
+	3> union semun.
+	4> DFPORT=56636
+	
+
+Detail for parent process : 
+
+	Parent process get resource before entry first cycle.And then entry first cycle,user can enter IP-ADDRESS of peer,style of format is 'IP:PORT'.
+If format was error,process will use the default TSAP.If IP(xxx.xxx.xxx.xxx) format was error,process will show error message to user,after that cycle reentry.
+When IP:PORT is right and had been translate successfuly,entry second cycle.Now,user can enter messages and send to peer,if peer in onlineIn.Command 'EXIT#' 
+will can be responed at first cycle,command 'SWITCH#' will can be responed at second cycle.
+
+Detail for child process : 
+
+	Child process does only listen local UDP socket and write messages from received to '1'.So,it will use select() to set timer and wait messages.Time out
+set up to 10s.After child process got a signal 'SIGINT' from user or parent process,it will stop and recycle resources.
+
+
+Head file : 
+
+	UNIX	
+
+	unistd.h
+	sys/types.h
+	sys/time.h
+	signal.h
+	sys/wait.h
+	sys/sem.h
+	errno.h
+
+	NET
+
+	sys/socket.h
+	netdb.h
+	netinet/in.h
+	arpa/inet.h
+
+	C
+
+	stdio.h
+	stdlib.h
+	string.h
+
+
+Work functions : 
+
+Parent/Child : 
+
+	int INITIALIZER(pid_t PID,struct hostent* HOST_INFO,int SOCKET);
+
+	Return int value,it is socket of parent process or child process.If returned a negative number is mean that have errors in it.
+	Work order of it : 
+
+		Use PID to determine who is parent and child.Set signal action for them.
+		Parameters 'PID','HOST_INFO','SOCKET' all are receive from main function.
+
+		Parent : 
+			1> Set signal handler up (SIGINT,SIGALRM,SIGCHLD).
+			2> Create a IPC object and initialize it.
+			3> Wait a signal 'SIGALRM' from child process to synchronize with it.
+			4> Return.
+			
+
+		Child : 
+			1> Use hostent* to get info of host.
+			2> Set signal handler up (SIGINT).
+			3> Get TSAP from input by user.
+			4> Send signal 'SIGALRM' to parent process.
+			5> Bind NSAP and TSAP.
+			6> Return.
+
+Parent :
+
+	void INPUT(int i_socket);
+	
+	Receive socket file descript and enter nested cycle.
+
+	Work order : 
+
+			1> Into first cycle and get IP:PORT for peer from user.
+			2> Check input,if it is 'EXIT#' will quit function.
+			3> If have nothing errors at translate,then entry the second cycle.
+			4> Get input from user and check that if it is a command.
+			#4.1> It is not a command then send the message to peer.
+			#4.2> It is a command 'SWITCH#' change CONDITION and stop the second cycle then return to first cycle.
+			5> Recycle the share resources.Quit function.
+
+Child : 
+	
+	void OUTPUT(int o_socket);
+		
+	Receive socket file descript and enter a cycle.
+
+	Work order : 
+			1> First,set timer for select().
+			2> Entry cycle to receive messages from other peers.
+			3> Receive messages and print it and the info of peer.
+			4> When it got a signal SIGINT from parent proces,child process will change CONDITION to stop cycle and quit.
+
+main : 
+	int main(void);
+
+	Prepare resources for work functions and execute some work for value from return by functions.
+
+	Work order : 
+			1> Get hostname.
+			2> Get host information.
+			3> Create a socket.
+			4> Execute fork to make a child process.
+			5> Use PID from fork() to call parent process function and child process function.
+			6> Receive value from return and execute works are not as same.
+			7> Return.
+
+Handler : 
+
+SIGINT : 
+
+	Parent process : 
+	
+		static void SIG_INT_FUNC_F(int sig);
+
+		When parent process has received 'SIGINT',this function will be called.
+
+		Work order : 
+				1> Declare a structure sem_ops with type is struct sembuf.
+				2> Get IPC object.
+				3> Change value of global variable CONDITION to 0.
+				4> Freed IPC object.
+				5> Return.
+
+	Child process : 
+		
+		static void SIG_INT_FUNC_F(int sig);
+
+		When child process has received 'SIGINT',this funcition will be called.
+
+		Work order : 
+				1> Change value of global variable CONDITION to 0.
+				2> Return.
+
+				# In functions of child process,CONDITION can only be read and does not to change it.
+
+
+SIGALRM : 
+
+	Parent process : 
+
+		static void SIG_ALRM(int sig);
+
+		When parent process has received 'SIGALRM' from child process,this function will be called.
+
+		Work order : 
+				1> Return.
+				# Change the default action of SIGALRM,parent process will be using this signal to get synchronize with child process.
+
+SIGCHLD : 
+
+	Parent process : 
+	
+		static void SIG_CHLD(int sig);
+
+		When parent process has received 'SIGCHLD',this function will be called.
+
+		Work oreder : 
+				1> Use kill() to send signal 'SIGINT' to itself.
+				2> Return.
+
+Location function  :
+
+		static unsigned short int Carry_Port(char* IP_PORT);
+
+		INPUT() will be using this function to carry port number from input by user on.
+
+		Work order : 
+				1> Check IP_PORT if it is a NULL pointer.
+				2> True,creat local variables and then erntry cyle.
+				#2.1> False,return default port number.
+				3> In cycle,traversal elements of IP_PORT and check delimiter ':'.
+				4> If once match with ':',counter++,save scriptor of current position.And then change this element to '\0'.
+				5> Check counter,if have not once match with ':',return default port number.
+				6> Had matches in IP_PORT with ':',entry cycle.
+				7> Once match,calculation value part of port number.
+				#7.1> Value of matcher is greater than 1,return default port.
+				8> Return the port number from calculation.
+
+		static void INTERRUPT(pid_t PID);
+
+		main() will use this function to shut child process down.
+
+		Work order : 
+				1> Use kill() to send 'SIGINT' to child process.pid_t PID is from fork().
+				2> Wait child process died.
+				3> Return.
+
+ERROR-CODE : 
+
+INITIALIZER() - 
+/*
+ *	0 - Succeed.
+ *
+ *	-1 - signal handler set failed in father process.
+ *	-7 - IPC creat failed in father process.
+ *	-8 - semctl failed.
+ *
+ *	-2 - signal handler set failed in child process.
+ *	-22 - child process bind socket failed.
+*/ 
+
+INPUT() | OUTPUT() -
+/*
+ *	0 - Success.
+ *	-1 - Get memory failed.
+*/ 
+
+
+			
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

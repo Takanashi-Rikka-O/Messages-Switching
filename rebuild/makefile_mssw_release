@@ -1,0 +1,20 @@
+#	Special all target.
+all:mssw_release
+
+#	Define enviornment value.
+CC=gcc
+CFLAGS=-I./ -Wall -std=c99
+
+#	Define work for target mssw_release
+mssw_release:main_mssw.o mssw.o
+	$(CC) $(CFLAGS) -o $@ $^
+	mv $@ ../bin/UDP_version/
+
+#	Define work for target main_mssw.o
+main_mssw.o:main_mssw.c mssw.h
+
+#	Define work for target mssw.o
+mssw.o:mssw.c mssw.h
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+	
