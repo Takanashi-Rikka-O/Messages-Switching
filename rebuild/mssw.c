@@ -411,9 +411,11 @@ int INPUT(int i_socket)
 									#ifdef DEBUG
 										fprintf(stderr,"Echo : %s \n",INPUT_BUF);
 									#endif
-
+									
+									INPUT_BUF[strlen(INPUT_BUF)-1]='\0';
+										
 									//	Send data to peer.
-									result=sendto(i_socket,INPUT_BUF,strlen(INPUT_BUF)-1,0,(struct sockaddr*)&PEER,LEN_ADDR);
+									result=sendto(i_socket,INPUT_BUF,strlen(INPUT_BUF),0,(struct sockaddr*)&PEER,LEN_ADDR);
 									//	Check value from return by sendto
 									switch (result)
 									{
@@ -525,6 +527,7 @@ int OUTPUT(int o_socket)
 			//	Set TIMER.
 			TIMER=TIMER_BAK;
 
+			memset(OUTPUT_BUF,'\0',BUF_LEN);
 
 			//	Wait select() return.
 			result=select(fd_setsize,&r_set,NULL,NULL,&TIMER);
